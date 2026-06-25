@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>PageSense AI</title>
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <header>
+    <h1>PageSense AI</h1>
+    <span id="status" class="status idle">idle</span>
+  </header>
+
+  <section class="actions">
+    <button id="ingest-active">Index this tab</button>
+    <button id="ingest-all">Index all tabs</button>
+  </section>
+
+  <section class="ask">
+    <textarea id="question" placeholder="Ask across your open tabs…" rows="3"></textarea>
+    <div class="row">
+      <select id="mode">
+        <option value="ask">Ask</option>
+        <option value="compare">Compare</option>
+        <option value="summarize">Summarize</option>
+      </select>
+      <button id="ask-btn">Ask</button>
+    </div>
+  </section>
+
+  <section id="answer" class="answer hidden">
+    <div class="meta">
+      <span id="model" class="chip"></span>
+      <span id="conf" class="chip"></span>
+    </div>
+    <div id="answer-text"></div>
+    <div id="citations" class="citations"></div>
+  </section>
+
+  <section id="error" class="error hidden"></section>
+
+  <footer>
+    <span id="indexed-count">0 chunks</span>
+    <a id="settings">settings</a>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>

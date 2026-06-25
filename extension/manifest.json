@@ -1,0 +1,29 @@
+{
+  "manifest_version": 3,
+  "name": "PageSense AI",
+  "version": "0.1.0",
+  "description": "Multi-tab RAG copilot: ask across your open tabs with citations.",
+  "permissions": ["activeTab", "tabs", "scripting", "storage"],
+  "host_permissions": ["<all_urls>"],
+  "action": {
+    "default_popup": "src/popup/popup.html",
+    "default_title": "PageSense AI"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/extractor.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "open-sidebar": {
+      "suggested_key": { "default": "Ctrl+Shift+P", "mac": "Command+Shift+P" },
+      "description": "Open PageSense AI sidebar"
+    }
+  }
+}
