@@ -1,0 +1,3 @@
+# Write 50-80 real questions against the documents in eval/data/docs.jsonl here.
+# One query per line.
+# Example: What is the impact of BM25 length normalization on short documents?

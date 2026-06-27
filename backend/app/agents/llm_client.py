@@ -55,15 +55,23 @@ class GeminiClient:
     model: str = "gemini-2.5-flash"
 
     def complete(self, system: str, user: str, temperature: float = 0.2) -> str:
-        import google.generativeai as genai
+        # Suppress protobuf version mismatch warnings from a conflicting
+        # TensorFlow install on the system. Must happen BEFORE google.genai imports.
+        import os as _os
+        _os.environ["PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION"] = "python"
+        import warnings as _w
+        _w.filterwarnings("ignore", message=".*Protobuf.*")
+        from google import genai
         settings = get_settings()
-        genai.configure(api_key=settings.gemini_api_key)
-        gm = genai.GenerativeModel(
-            self.model,
-            system_instruction=system,
-            generation_config={"temperature": temperature},
+        client = genai.Client(api_key=settings.gemini_api_key)
+        resp = client.models.generate_content(
+            model=self.model,
+            contents=user,
+            config=genai.types.GenerateContentConfig(
+                system_instruction=system,
+                temperature=temperature,
+            ),
         )
-        resp = gm.generate_content(user)
         return resp.text or ""
 
 

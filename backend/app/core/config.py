@@ -9,6 +9,16 @@ import os
 from dataclasses import dataclass, field
 from functools import lru_cache
 
+# Load variables from a local .env file (if present) into the environment.
+# This MUST run before any _env() call below reads os.environ.
+try:
+    from dotenv import load_dotenv
+    # .env lives at the project root (one level above backend/).
+    _ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+    load_dotenv(os.path.join(_ROOT, ".env"))
+except Exception:
+    pass  # python-dotenv missing or no .env — env vars still work normally
+
 
 def _env(key: str, default: str) -> str:
     return os.environ.get(key, default)

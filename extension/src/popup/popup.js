@@ -7,7 +7,8 @@ const send = (msg) => new Promise((resolve) => chrome.runtime.sendMessage(msg, r
 function setStatus(state, text) {
   const el = $("status");
   el.className = "status " + state;
-  el.textContent = text;
+  const textEl = $("status-text");
+  if (textEl) textEl.textContent = text;
 }
 
 function showAnswer(resp) {

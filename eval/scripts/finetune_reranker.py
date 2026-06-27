@@ -127,7 +127,9 @@ def main() -> None:
 
     try:
         from sentence_transformers import CrossEncoder
-        from sentence_transformers.cross_encoder.evaluation import CECorrelationEvaluator
+        from sentence_transformers.cross_encoder.evaluation import (
+            CrossEncoderClassificationEvaluator,
+        )
         from torch.utils.data import DataLoader
     except ImportError as e:  # pragma: no cover
         raise SystemExit(
@@ -138,11 +140,18 @@ def main() -> None:
     model = CrossEncoder(base_model, num_labels=1, max_length=512)
     log.info("Loaded base model: %s", base_model)
 
-    train_loader = DataLoader(train, shuffle=True, batch_size=args.batch_size)
+    # Convert raw [query, passage, label] lists into InputExample objects
+    # that the newer sentence-transformers CrossEncoder.fit() expects.
+    from sentence_transformers import InputExample
+    train_examples = [InputExample(texts=[q, p], label=float(l)) for q, p, l in train]
+
+    train_loader = DataLoader(train_examples, shuffle=True, batch_size=args.batch_size)
     evaluator = None
     if val:
-        evaluator = CECorrelationEvaluator.from_input_examples(
-            [(q, p, float(l)) for q, p, l in val], name="pagesense-dev"
+        evaluator = CrossEncoderClassificationEvaluator(
+            sentence_pairs=[[q, p] for q, p, _ in val],
+            labels=[int(l) for _, _, l in val],
+            name="pagesense-dev",
         )
 
     args.out.parent.mkdir(parents=True, exist_ok=True)
