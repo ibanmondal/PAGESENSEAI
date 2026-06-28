@@ -10,7 +10,12 @@ env/
 
 # Eval artifacts (models are large; don't commit)
 eval/artifacts/
-eval/results.json
+eval/results*.json
+
+# Scratch & Temporary files
+diff_*.txt
+server_instructions.txt
+result.md
 
 # JS / extension
 node_modules/
