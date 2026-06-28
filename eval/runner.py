@@ -106,29 +106,52 @@ class Pipeline:
 
 def _configs(settings, include_dense: bool) -> list[Config]:
     """Build the experimental configs. Dense-based ones are optional so the
-    harness can run baseline-only on machines without torch."""
+    harness can run baseline-only on machines without torch.
+
+    IMPORTANT: heavy models (embedding + cross-encoder) are instantiated ONCE
+    here and shared across every query's Pipeline. Only the per-query index
+    rebuilds. This is what keeps the harness fast — re-loading the model per
+    query would be ~100x slower and would time out on any non-trivial set.
+    """
+    # Shared heavy models — load each exactly once.
+    shared_dense = None
+    shared_reranker = None
+    if include_dense:
+        shared_dense = DenseRetriever(settings.embedding_model)
+        shared_dense._ensure_model()  # eager load, done once
+        shared_reranker = CrossEncoderReRanker(settings.reranker_source)
+        shared_reranker._ensure_model()  # eager load, done once
+
     cfgs: list[Config] = []
     cfgs.append(Config("bm25", lambda: Pipeline(
         BM25Retriever(), top_n=20, top_k=10)))
     if include_dense:
         cfgs.append(Config("dense", lambda: Pipeline(
-            DenseRetriever(settings.embedding_model), top_n=20, top_k=10)))
+            _fresh_dense(shared_dense), top_n=20, top_k=10)))
         cfgs.append(Config("hybrid", lambda: Pipeline(
             HybridRetriever(
-                [BM25Retriever(), DenseRetriever(settings.embedding_model)],
+                [BM25Retriever(), _fresh_dense(shared_dense)],
                 weights=[settings.bm25_weight, settings.dense_weight],
             ),
             top_n=20, top_k=10,
         )))
         cfgs.append(Config("hybrid+rerank", lambda: Pipeline(
             HybridRetriever(
-                [BM25Retriever(), DenseRetriever(settings.embedding_model)],
+                [BM25Retriever(), _fresh_dense(shared_dense)],
                 weights=[settings.bm25_weight, settings.dense_weight],
             ),
-            reranker=CrossEncoderReRanker(settings.reranker_source),
+            reranker=shared_reranker,
             top_n=20, top_k=10,
         )))
     return cfgs
+
+
+def _fresh_dense(shared: "DenseRetriever") -> "DenseRetriever":
+    """Return a DenseRetriever that REUSES the shared model but starts with an
+    empty index, so per-query re-indexing doesn't leak between queries."""
+    d = DenseRetriever(shared.model_name)
+    d._model = shared._model  # reuse the already-loaded SentenceTransformer
+    return d
 
 
 # ---------------------------------------------------------------------------
