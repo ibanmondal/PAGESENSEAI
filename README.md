@@ -3,7 +3,7 @@
 # PageSense AI
 **Multi-Tab RAG Copilot for the Browser**
 
-[![PageSense Banner Placeholder](https://via.placeholder.com/1000x200/0d1117/58a6ff?text=PageSense+AI+-+Multi-Tab+RAG+Copilot)](#)
+![PageSense Banner](https://capsule-render.vercel.app/api?type=waving&color=58a6ff&height=200&section=header&text=PageSense%20AI&fontSize=50&fontAlignY=35&desc=Multi-Tab%20RAG%20Copilot&descAlignY=55&descSize=20)
 
 **[WHY](#-why-pagesense)** &nbsp; • &nbsp; **[ARCHITECTURE](#-architecture)** &nbsp; • &nbsp; **[QUICKSTART](#-quickstart)** &nbsp; • &nbsp; **[EVALUATION](#-the-eval-harness)** &nbsp; • &nbsp; **[STATUS](#-status)**
 
@@ -153,5 +153,5 @@ Readiness ≈ 95%. The core RAG pipeline, extension, and stateful multi-turn age
 
 <div align="center">
   <p>Engineered for robustness. Built to prove it.</p>
-  <img src="https://via.placeholder.com/1000x20/0d1117/238636?text=+" alt="footer">
+  <img src="https://capsule-render.vercel.app/api?type=waving&color=238636&height=100&section=footer" alt="footer">
 </div>
