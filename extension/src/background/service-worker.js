@@ -64,30 +64,38 @@ async function ingestTabs(tabIds) {
   if (tabs.length === 0) {
     return { ok: false, error: "No extractable tabs." };
   }
-  const res = await fetch(`${backend}/api/ingest`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, tabs }),
-  });
-  if (!res.ok) {
-    return { ok: false, error: `Backend ${res.status}` };
+  try {
+    const res = await fetch(`${backend}/api/ingest`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, tabs }),
+    });
+    if (!res.ok) {
+      return { ok: false, error: `Backend ${res.status}` };
+    }
+    const data = await res.json();
+    return { ok: true, sessionId, ...data };
+  } catch (e) {
+    return { ok: false, error: "Cannot connect to backend. Is it running?" };
   }
-  const data = await res.json();
-  return { ok: true, sessionId, ...data };
 }
 
 async function ask(question, mode = "ask") {
   const backend = await getBackend();
   const sessionId = await getSession();
-  const res = await fetch(`${backend}/api/query`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ session_id: sessionId, question, mode }),
-  });
-  if (!res.ok) {
-    return { ok: false, error: `Backend ${res.status}` };
+  try {
+    const res = await fetch(`${backend}/api/query`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ session_id: sessionId, question, mode }),
+    });
+    if (!res.ok) {
+      return { ok: false, error: `Backend ${res.status}` };
+    }
+    return { ok: true, ...(await res.json()) };
+  } catch (e) {
+    return { ok: false, error: "Cannot connect to backend. Is it running?" };
   }
-  return { ok: true, ...(await res.json()) };
 }
 
 // Simple string hash for stable tab ids.
