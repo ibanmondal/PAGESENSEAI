@@ -22,12 +22,21 @@ async function getSession() {
 }
 
 async function extractFromTab(tab) {
+  const isPdf = tab.url.toLowerCase().includes('.pdf');
+  
   // Inject extractor if needed, then ask it to extract.
   try {
-    await chrome.scripting.executeScript({
-      target: { tabId: tab.id },
-      files: ["src/content/extractor.js"],
-    });
+    if (isPdf) {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["src/lib/pdf.min.js", "src/content/pdf_extractor.js"],
+      });
+    } else {
+      await chrome.scripting.executeScript({
+        target: { tabId: tab.id },
+        files: ["src/content/extractor.js"],
+      });
+    }
   } catch (e) {
     // chrome:// pages and similar can't be scripted; skip gracefully.
     return null;

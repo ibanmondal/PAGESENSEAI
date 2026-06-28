@@ -25,5 +25,11 @@
       "suggested_key": { "default": "Ctrl+Shift+P", "mac": "Command+Shift+P" },
       "description": "Open PageSense AI sidebar"
     }
-  }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["src/lib/pdf.worker.min.js"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
