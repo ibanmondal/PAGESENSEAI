@@ -6,7 +6,7 @@
  *
  * Backend base URL is configurable; defaults to local FastAPI dev server.
  */
-const DEFAULT_BACKEND = "http://localhost:8000";
+const DEFAULT_BACKEND = "https://pagesense-backend-391549104610.us-central1.run.app";
 
 async function getBackend() {
   const { pagesense_backend } = await chrome.storage.local.get("pagesense_backend");

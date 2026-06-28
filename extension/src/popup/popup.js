@@ -152,7 +152,7 @@ $("question").addEventListener("keydown", (e) => {
 
 // settings: just configure backend URL via a prompt for now (roadmap: real UI)
 $("settings").addEventListener("click", async () => {
-  const cur = (await chrome.storage.local.get("pagesense_backend")).pagesense_backend || "http://localhost:8000";
+  const cur = (await chrome.storage.local.get("pagesense_backend")).pagesense_backend || "https://pagesense-backend-391549104610.us-central1.run.app";
   const next = prompt("Backend URL:", cur);
   if (next) await chrome.storage.local.set({ pagesense_backend: next.trim() });
 });
