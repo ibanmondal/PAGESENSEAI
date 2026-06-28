@@ -273,15 +273,14 @@ def build_graph(retrieve_fn, router, answer_fn=None, check_fn=None, use_langgrap
 def _from_dict(d: dict) -> AgentState:
     """Reconstruct AgentState from a langgraph dict."""
     req_dict = d.get("request", {})
-    # Default to an empty dict if it fails, though it shouldn't
-    req = QueryRequest(**req_dict) if req_dict else None
+    req = QueryRequest(**req_dict) if isinstance(req_dict, dict) and req_dict else req_dict
     
     return AgentState(
         request=req,
         rewritten_query=d.get("rewritten_query", ""),
         retrieval=None,
         draft_answer=d.get("draft_answer", ""),
-        citations=[Citation(**c) for c in d.get("citations", [])],
+        citations=[c if isinstance(c, Citation) else Citation(**c) for c in d.get("citations", [])],
         chat_history=d.get("chat_history", []),
         warning=d.get("warning"),
         confidence=d.get("confidence", 0.0),
