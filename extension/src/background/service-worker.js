@@ -117,6 +117,10 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
     ask(msg.question, msg.mode).then(sendResponse);
     return true;
   }
+  if (msg?.type === "GET_SESSION") {
+    getSession().then(sendResponse);
+    return true;
+  }
 });
 
 chrome.runtime.onInstalled.addListener(() => {

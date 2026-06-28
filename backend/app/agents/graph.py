@@ -30,6 +30,7 @@ class AgentState:
     retrieval: RetrievalResult | None = None
     draft_answer: str = ""
     citations: list[Citation] = field(default_factory=list)
+    chat_history: list[dict] = field(default_factory=list)
     warning: str | None = None
     confidence: float = 0.0
     model_tier: str = "fast"
@@ -101,13 +102,23 @@ def make_generate_node(router, answer_fn: Callable | None = None) -> Callable:
         state.model_tier = tier
         state.model_used = getattr(client, "model", client.name)
 
+        # Format history
+        history_text = ""
+        for msg in state.chat_history:
+            history_text += f"{msg['role'].capitalize()}: {msg['content']}\n\n"
+
         context = _format_context(state.retrieval)
         system = _system_prompt(state.request.mode)
+        
         user = (
             f"Use ONLY the context below to answer. If the context is insufficient, "
             f"say so explicitly. Cite sources as [#] matching the numbered context.\n\n"
-            f"Question: {state.request.question}\n\n{context}"
         )
+        if history_text:
+            user += f"--- CHAT HISTORY ---\n{history_text}\n"
+            
+        user += f"--- CONTEXT ---\n{context}\n\nQuestion: {state.request.question}"
+
         if answer_fn is not None:
             state.draft_answer = answer_fn(system, user)
         else:
@@ -116,6 +127,14 @@ def make_generate_node(router, answer_fn: Callable | None = None) -> Callable:
             except Exception as e:
                 log.exception("generation failed")
                 state.error = f"generate: {e}"
+        
+        # Append to history
+        if not state.error:
+            state.chat_history = state.chat_history + [
+                {"role": "user", "content": state.request.question},
+                {"role": "assistant", "content": state.draft_answer}
+            ]
+
         return state
     return _node
 
@@ -208,43 +227,62 @@ def build_graph(retrieve_fn, router, answer_fn=None, check_fn=None, use_langgrap
 
     try:
         from langgraph.graph import StateGraph, END
+        from langgraph.checkpoint.memory import MemorySaver
     except ImportError:
         log.info("langgraph not installed — using sequential fallback")
         return _run
 
+    # Global checkpointer for this graph instance
+    memory = MemorySaver()
+
     # TypedDict shim so langgraph can route on our dataclass state.
     g = StateGraph(dict)
-    g.add_node("rewrite", lambda d: asdict(rewrite_node(_from_dict(d, state_request))))
-    g.add_node("retrieve", lambda d: asdict(retrieve_node(_from_dict(d, state_request))))
-    g.add_node("generate", lambda d: asdict(generate_node(_from_dict(d, state_request))))
-    g.add_node("factcheck", lambda d: asdict(factcheck_node(_from_dict(d, state_request))))
+    g.add_node("rewrite", lambda d: asdict(rewrite_node(_from_dict(d))))
+    g.add_node("retrieve", lambda d: asdict(retrieve_node(_from_dict(d))))
+    g.add_node("generate", lambda d: asdict(generate_node(_from_dict(d))))
+    g.add_node("factcheck", lambda d: asdict(factcheck_node(_from_dict(d))))
     g.set_entry_point("rewrite")
     g.add_edge("rewrite", "retrieve")
     g.add_edge("retrieve", "generate")
     g.add_edge("generate", "factcheck")
     g.add_edge("factcheck", END)
-    compiled = g.compile()
+    compiled = g.compile(checkpointer=memory)
 
     def _run_graph(state: AgentState) -> AgentState:
-        # Run our pure-node pipeline directly; the graph wiring is structural.
-        return _run(state)
+        config = {"configurable": {"thread_id": state.request.session_id}}
+        
+        # Clear transient fields for a new run, but keep request to re-initialize
+        # chat_history will be automatically merged in by MemorySaver.
+        input_dict = {
+            "request": state.request.model_dump(),
+            "rewritten_query": "",
+            "retrieval": None,
+            "draft_answer": "",
+            "citations": [],
+            "warning": None,
+            "confidence": 0.0,
+            "model_tier": "fast",
+            "model_used": "",
+            "error": None
+        }
+        final_dict = compiled.invoke(input_dict, config=config)
+        return _from_dict(final_dict)
     return _run_graph
 
 
-# Internal: we carry the live QueryRequest via closure, not the serialized dict,
-# because QueryRequest is richer than a plain dict (HttpUrl etc). This keeps the
-# graph compatible without serializing complex types.
-state_request: QueryRequest | None = None
-
-
-def _from_dict(d: dict, req_holder) -> AgentState:
-    """Reconstruct AgentState from a langgraph dict, keeping the typed request."""
+def _from_dict(d: dict) -> AgentState:
+    """Reconstruct AgentState from a langgraph dict."""
+    req_dict = d.get("request", {})
+    # Default to an empty dict if it fails, though it shouldn't
+    req = QueryRequest(**req_dict) if req_dict else None
+    
     return AgentState(
-        request=req_holder,
+        request=req,
         rewritten_query=d.get("rewritten_query", ""),
         retrieval=None,
         draft_answer=d.get("draft_answer", ""),
         citations=[Citation(**c) for c in d.get("citations", [])],
+        chat_history=d.get("chat_history", []),
         warning=d.get("warning"),
         confidence=d.get("confidence", 0.0),
         model_tier=d.get("model_tier", "fast"),

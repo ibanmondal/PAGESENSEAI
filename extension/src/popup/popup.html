@@ -35,9 +35,13 @@
         </button>
       </section>
 
+      <div id="chat-container" class="chat-container">
+        <!-- Chat bubbles appended here -->
+      </div>
+
       <section class="ask card">
         <div class="input-wrapper">
-          <textarea id="question" placeholder="Ask across your open tabs…" rows="3"></textarea>
+          <textarea id="question" placeholder="Ask across your open tabs…" rows="2"></textarea>
         </div>
         <div class="row">
           <div class="select-wrapper">
@@ -54,17 +58,6 @@
           </button>
         </div>
       </section>
-
-      <section id="answer" class="answer hidden card">
-        <div class="meta">
-          <span id="model" class="chip"></span>
-          <span id="conf" class="chip"></span>
-        </div>
-        <div id="answer-text"></div>
-        <div id="citations" class="citations"></div>
-      </section>
-
-      <section id="error" class="error hidden"></section>
     </main>
 
     <footer>
