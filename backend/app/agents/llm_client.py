@@ -124,7 +124,10 @@ def build_router() -> ModelRouter:
         log.info("Router fast tier: Gemini %s", settings.fast_model)
     if settings.openai_api_key:
         strong = OpenAICompatibleClient(
-            name="openai", model=settings.strong_model, api_key=settings.openai_api_key,
+            name="openai", 
+            model=settings.strong_model, 
+            api_key=settings.openai_api_key,
+            base_url=settings.openai_base_url or None,
         )
         log.info("Router strong tier: OpenAI %s", settings.strong_model)
     # Fallback: if only one key is set, use it for both tiers.

@@ -275,10 +275,27 @@ def _from_dict(d: dict) -> AgentState:
     req_dict = d.get("request", {})
     req = QueryRequest(**req_dict) if isinstance(req_dict, dict) and req_dict else req_dict
     
+    retrieval = None
+    ret_dict = d.get("retrieval")
+    if ret_dict and isinstance(ret_dict, dict):
+        from ..models.schemas import RetrievalResult, ScoredChunk, Chunk
+        chunks = []
+        for sc in ret_dict.get("top_chunks", []):
+            chunk_data = sc.get("chunk", {})
+            chunk = Chunk(**chunk_data) if isinstance(chunk_data, dict) else chunk_data
+            chunks.append(ScoredChunk(chunk=chunk, score=sc.get("score", 0.0)))
+        retrieval = RetrievalResult(
+            query=ret_dict.get("query", ""),
+            top_chunks=chunks,
+            trace=ret_dict.get("trace", {})
+        )
+    elif ret_dict:
+        retrieval = ret_dict
+
     return AgentState(
         request=req,
         rewritten_query=d.get("rewritten_query", ""),
-        retrieval=None,
+        retrieval=retrieval,
         draft_answer=d.get("draft_answer", ""),
         citations=[c if isinstance(c, Citation) else Citation(**c) for c in d.get("citations", [])],
         chat_history=d.get("chat_history", []),

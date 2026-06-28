@@ -54,6 +54,7 @@ class Settings:
     strong_model: str = field(default_factory=lambda: _env("STRONG_MODEL", "gpt-4.1"))
     # Provider API keys — read lazily, never logged.
     openai_api_key: str = field(default_factory=lambda: _env("OPENAI_API_KEY", ""))
+    openai_base_url: str = field(default_factory=lambda: _env("OPENAI_BASE_URL", ""))
     gemini_api_key: str = field(default_factory=lambda: _env("GEMINI_API_KEY", ""))
 
     # --- Retrieval ---
