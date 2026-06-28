@@ -26,6 +26,11 @@ def create_app() -> FastAPI:
  allow_headers=["*"],
     )
     app.include_router(router, prefix="/api")
+
+    @app.get("/")
+    def root():
+        return {"message": "PageSense AI Backend is running!"}
+
     log.info("%s initialized (env=%s)", settings.app_name, settings.env)
     return app
 
