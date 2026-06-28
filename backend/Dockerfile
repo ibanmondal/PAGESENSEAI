@@ -19,4 +19,4 @@ COPY . .
 EXPOSE 8000
 
 # Run Uvicorn (Cloud Run uses the PORT environment variable, defaults to 8080)
-CMD uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8080}"]
