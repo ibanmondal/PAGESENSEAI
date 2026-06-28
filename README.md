@@ -37,21 +37,21 @@ graph TD
     classDef retrieval fill:#161b22,stroke:#d29922,stroke-width:2px,color:#c9d1d9;
     classDef agent fill:#161b22,stroke:#8957e5,stroke-width:2px,color:#c9d1d9;
 
-    subgraph Browser Extension (MV3)
+    subgraph Extension [Browser Extension MV3]
         CS[Content Script<br>Extract clean text]:::client
         SW[Service Worker<br>State & Networking]:::client
     end
 
-    subgraph FastAPI Backend
+    subgraph Backend [FastAPI Backend]
         API[API Routes<br>/query, /ingest]:::api
         SS[(Session Store<br>In-Memory)]:::api
 
-        subgraph RAG Core
+        subgraph Core [RAG Core]
             HR[Hybrid Retriever<br>BM25 + Dense + RRF]:::retrieval
             RR[Cross-Encoder<br>Re-ranker]:::retrieval
         end
 
-        subgraph LangGraph Agent
+        subgraph Agent [LangGraph Agent]
             RC[Model Router<br>Flash vs GPT-4o]:::agent
             LG[Retrieve → Generate → Fact Check]:::agent
             MS[(Memory Saver<br>Conversational state)]:::agent
